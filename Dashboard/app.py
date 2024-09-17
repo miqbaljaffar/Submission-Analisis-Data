@@ -94,8 +94,10 @@ with col2:
     st.markdown(f"Average Income: **{avg_spend}**")
 
 fig, ax = plt.subplots(figsize=(12, 6))
+monthly_income = main_df.groupby(main_df["order_approved_at"].dt.to_period("M")).agg({"payment_value": "sum"}).reset_index()
 ax.plot(
-    main_df.groupby(main_df["order_approved_at"].dt.to_period("M")).sum()["payment_value"].reset_index(),
+    monthly_income["order_approved_at"].astype(str),
+    monthly_income["payment_value"],
     marker='o',
     color="#FE0000",
     linewidth=2
@@ -180,13 +182,11 @@ with tab1:
     st.pyplot(fig)
 
 with tab2:
-    city, most_common_city = create_bycity_df(main_df)
-    st.markdown(f"Most Common City: **{most_common_city}**")
+    top_10_cities, _ = create_bycity_df(main_df)
     fig, ax = plt.subplots(figsize=(12, 8))
-    top_10_cities = city.head(10)
 
     # Plot
-    sns.barplot(x='total_customer', y='customer_city', data=top_10_cities, palette='viridis', orient='h', ax=ax)
+    sns.barplot(x='total_customer', y='customer_city', data=top_10_cities.head(10), palette='viridis', orient='h', ax=ax)
     ax.set_title("Top 10 Cities by Customer Count", fontsize=18, weight='bold')
     ax.set_xlabel("Number of Customers", fontsize=14)
     ax.set_ylabel("City", fontsize=14)
