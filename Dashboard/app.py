@@ -219,30 +219,31 @@ with tab3:
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.set_style("whitegrid")
 
-    # Create barplot with consistent coloring
-    sns.barplot(y=order_status.index, x=order_status.values, palette="Reds_r", ax=ax)
+    # Create barplot with vertical bars using Reds_r palette
+    sns.barplot(x=order_status.index, y=order_status.values, palette="Reds_r", ax=ax)
 
     # Add grid only on y-axis
     plt.grid(axis='y', linestyle='--', alpha=0.7)
 
     # Add labels to bars
     for i, v in enumerate(order_status):
-        ax.text(v + 0.02 * order_status.max(), i, str(v), ha='left', va='center', fontsize=12, color='black')
+        ax.text(i, v + 0.02 * order_status.max(), str(v), ha='center', va='bottom', fontsize=12, color='black')
 
     # Add title and labels
     plt.title('Order Status Distribution', fontsize=18, weight='bold')
-    plt.xlabel('Number of Orders', fontsize=14)
-    plt.ylabel('Order Status', fontsize=14)
-    plt.xticks(fontsize=12)
+    plt.xlabel('Order Status', fontsize=14)
+    plt.ylabel('Number of Orders', fontsize=14)
+    plt.xticks(fontsize=12, rotation=45)
     plt.yticks(fontsize=12)
 
     # Set y-axis limit
-    plt.ylim(-0.5, len(order_status) - 0.5)
+    plt.ylim(0, order_status.max() + 0.1 * order_status.max())
 
     # Ensure layout is tight
     plt.tight_layout()
 
     st.pyplot(fig)
+
 
 # Footer
 st.caption('Copyright (C) Mohammad Iqbal Jaffar 2024')
