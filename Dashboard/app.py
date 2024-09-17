@@ -55,7 +55,7 @@ def create_order_status(df):
 
 # Load dataset
 datetime_columns = ["order_approved_at", "order_delivered_carrier_date", "order_delivered_customer_date", "order_estimated_delivery_date", "order_purchase_timestamp", "shipping_limit_date"]
-all_df = pd.read_csv(''https://raw.githubusercontent.com/miqbaljaffar/Submission-Analisis-Data/main/Dashboard/all_data.csv'')
+all_df = pd.read_csv('https://raw.githubusercontent.com/miqbaljaffar/Submission-Analisis-Data/main/Dashboard/all_data.csv')
 all_df.sort_values(by="order_approved_at", inplace=True)
 all_df.reset_index(inplace=True)
 
@@ -69,7 +69,7 @@ max_date = all_df["order_approved_at"].max()
 
 with st.sidebar:
     st.title("Dicoding E-Commerce")
-    st.image("'https://raw.githubusercontent.com/miqbaljaffar/Submission-Analisis-Data/main/Dashboard/logo.png")
+    st.image('https://raw.githubusercontent.com/miqbaljaffar/Submission-Analisis-Data/main/Dashboard/logo.png')
     start_date, end_date = st.date_input(
         label="Date Range",
         min_value=min_date,
