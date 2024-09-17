@@ -6,7 +6,6 @@ from babel.numbers import format_currency
 
 # Set uniform style and color palette
 sns.set(style='whitegrid')
-main_palette = sns.color_palette("viridis", 10)
 
 # Helper functions
 def create_daily_orders_df(df):
@@ -100,42 +99,20 @@ with col2:
     avg_spend = format_currency(sum_spend_df["total_spend"].mean(), "BRL", locale="pt_BR")
     st.markdown(f"Average Income: **{avg_spend}**")
 
-fig, ax = plt.subplots(figsize=(14, 8))
+fig, ax = plt.subplots(figsize=(12, 6))
 ax.plot(
     sum_spend_df["order_approved_at"],
     sum_spend_df["total_spend"],
     marker='o',
-    linewidth=2,
     color="#FE0000",
-    linestyle='-'
+    linewidth=2
 )
-
-# Adding grid with transparency
-ax.grid(True, linestyle='--', alpha=0.7)
-
-# Annotating only important points (peaks and troughs)
-for i, row in sum_spend_df.iterrows():
-    if row["total_spend"] == sum_spend_df["total_spend"].max() or row["total_spend"] == sum_spend_df["total_spend"].min():
-        ax.text(
-            row["order_approved_at"],
-            row["total_spend"],
-            f'R${row["total_spend"]:,.2f}',
-            color='black',
-            ha='center',
-            va='bottom',
-            fontsize=12
-        )
-
-# Title and labels
-ax.set_title("Total Income per Month (2018)", fontsize=20, weight='bold')
-ax.set_xlabel("Month-Year", fontsize=14)
+ax.set_title("Monthly Total Income", fontsize=20, weight='bold')
+ax.set_xlabel("Date", fontsize=14)
 ax.set_ylabel("Total Income (BRL)", fontsize=14)
-ax.tick_params(axis='x', labelsize=12, rotation=45)
-ax.tick_params(axis='y', labelsize=12)
-
-# Adjust layout
-plt.tight_layout()
-
+ax.tick_params(axis="x", rotation=45, labelsize=12)
+ax.tick_params(axis="y", labelsize=12)
+plt.grid(True, linestyle='--', alpha=0.7)
 st.pyplot(fig)
 
 # Product Sales - Top 5 and Bottom 5 Products
@@ -179,12 +156,33 @@ tab1, tab2, tab3 = st.tabs(["State", "Top 10 City", "Order Status"])
 with tab1:
     st.markdown(f"Most Common State: **{most_common_state}**")
     fig, ax = plt.subplots(figsize=(12, 8))
-    sns.barplot(y=state.customer_state, x=state.customer_count, palette=sns.color_palette("viridis", n_colors=len(state)), ax=ax)
-    ax.set_title("Customers by State", fontsize=18, weight='bold')
+
+    # Determine the most common state and color palette
+    most_common_state = state.loc[state['customer_count'].idxmax(), 'customer_state']
+    color_palette = ["#FF4500" if state == most_common_state else "#87CEFA" for state in state['customer_state']]
+
+    # Plot
+    sns.barplot(x='customer_count', y='customer_state', data=state, palette=color_palette, orient='h', ax=ax)
+    ax.set_title("Customer Distribution by State", fontsize=18, weight='bold')
     ax.set_xlabel("Number of Customers", fontsize=14)
     ax.set_ylabel("State", fontsize=14)
     ax.tick_params(axis='x', labelsize=12)
     ax.tick_params(axis='y', labelsize=12)
+
+    # Set x-axis limit
+    x_max = state['customer_count'].max() + 500  # Extra space for labels
+    ax.set_xlim(0, x_max)
+
+    # Annotate bars with count
+    for p in ax.patches:
+        ax.annotate(f'{p.get_width():,}', 
+                    (p.get_width() + 100, p.get_y() + p.get_height() / 2),
+                    va='center',
+                    ha='left',
+                    fontsize=12,
+                    color='black')
+
+    plt.tight_layout()
     st.pyplot(fig)
 
 with tab2:
