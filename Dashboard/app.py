@@ -216,18 +216,22 @@ with tab2:
 
 with tab3:
     st.markdown(f"Most Common Order Status: **{common_status}**")
+    
+    # Sort the order_status in ascending order
+    order_status_sorted = order_status.sort_values(ascending=True)
+    
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.set_style("whitegrid")
 
-    # Create barplot with vertical bars using Reds_r palette
-    sns.barplot(x=order_status.index, y=order_status.values, palette="Reds_r", ax=ax)
+    # Create barplot with vertical bars using Reds_r palette and sorted data
+    sns.barplot(x=order_status_sorted.index, y=order_status_sorted.values, palette="Reds_r", ax=ax)
 
     # Add grid only on y-axis
     plt.grid(axis='y', linestyle='--', alpha=0.7)
 
     # Add labels to bars
-    for i, v in enumerate(order_status):
-        ax.text(i, v + 0.02 * order_status.max(), str(v), ha='center', va='bottom', fontsize=12, color='black')
+    for i, v in enumerate(order_status_sorted):
+        ax.text(i, v + 0.02 * order_status_sorted.max(), str(v), ha='center', va='bottom', fontsize=12, color='black')
 
     # Add title and labels
     plt.title('Order Status Distribution', fontsize=18, weight='bold')
@@ -237,7 +241,7 @@ with tab3:
     plt.yticks(fontsize=12)
 
     # Set y-axis limit
-    plt.ylim(0, order_status.max() + 0.1 * order_status.max())
+    plt.ylim(0, order_status_sorted.max() + 0.1 * order_status_sorted.max())
 
     # Ensure layout is tight
     plt.tight_layout()
