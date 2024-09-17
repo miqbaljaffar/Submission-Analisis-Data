@@ -55,7 +55,7 @@ def create_order_status(df):
 
 # Load dataset
 datetime_columns = ["order_approved_at", "order_delivered_carrier_date", "order_delivered_customer_date", "order_estimated_delivery_date", "order_purchase_timestamp", "shipping_limit_date"]
-all_df = pd.read_csv('/content/drive/MyDrive/Submission/Dashboard/all_data.csv')
+all_df = pd.read_csv('https://github.com/miqbaljaffar/Submission-Analisis-Data/blob/main/Dashboard/all_data.csv')
 all_df.sort_values(by="order_approved_at", inplace=True)
 all_df.reset_index(inplace=True)
 
@@ -69,7 +69,7 @@ max_date = all_df["order_approved_at"].max()
 
 with st.sidebar:
     st.title("Dicoding E-Commerce")
-    st.image("/content/drive/MyDrive/Submission/Dashboard/logo.png")
+    st.image("https://github.com/miqbaljaffar/Submission-Analisis-Data/blob/main/Dashboard/logo.png")
     start_date, end_date = st.date_input(
         label="Date Range",
         min_value=min_date,
@@ -79,7 +79,6 @@ with st.sidebar:
 
 main_df = all_df[(all_df["order_approved_at"] >= str(start_date)) & (all_df["order_approved_at"] <= str(end_date))]
 
-# Create DataFrames
 daily_orders_df = create_daily_orders_df(main_df)
 sum_spend_df = create_sum_spend_df(main_df)
 sum_order_items_df = create_sum_order_items_df(main_df)
@@ -130,23 +129,18 @@ with col2:
 
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
 
-# Use the same palette for both plots
-palette = sns.color_palette("viridis", n_colors=5)
-
-# Top 5 Product Categories
-sns.barplot(x="product_count", y="product_category_name_english",
-            data=sum_order_items_df.head(5), palette=palette, ax=ax[0])
+top_colors = sns.color_palette("crest", n_colors=5)
+sns.barplot(x="product_count", y="product_category_name_english", data=sum_order_items_df.head(5), palette=top_colors, ax=ax[0])
 ax[0].set_xlabel("Number of Sales", fontsize=16)
 ax[0].set_title("Top 5 Product Categories", fontsize=18, weight='bold')
 ax[0].tick_params(axis='y', labelsize=14)
 ax[0].tick_params(axis='x', labelsize=14)
 
-# Bottom 5 Product Categories
-sns.barplot(x="product_count", y="product_category_name_english",
-            data=sum_order_items_df.tail(5), palette=palette[::-1], ax=ax[1])
+bottom_colors = sns.color_palette("pastel", n_colors=5)
+sns.barplot(x="product_count", y="product_category_name_english", data=sum_order_items_df.tail(5), palette=bottom_colors, ax=ax[1])
 ax[1].set_xlabel("Number of Sales", fontsize=16)
 ax[1].set_title("Bottom 5 Product Categories", fontsize=18, weight='bold')
-ax[1].invert_xaxis()  # Invert x-axis for visual interest
+ax[1].invert_xaxis()
 ax[1].yaxis.set_label_position("right")
 ax[1].yaxis.tick_right()
 ax[1].tick_params(axis='y', labelsize=14)
@@ -212,24 +206,25 @@ with tab2:
 
 with tab3:
     st.markdown(f"Most Common Order Status: **{common_status}**")
-    fig, ax = plt.subplots(figsize=(12, 8))
 
+    fig, ax = plt.subplots(figsize=(8, 6))
     sns.barplot(y=order_status.index,
                 x=order_status.values,
-                palette=sns.color_palette("plasma", n_colors=len(order_status)),
+                order=order_status.index,
+                palette=sns.color_palette("magma", n_colors=len(order_status)),
                 ax=ax
                 )
 
     plt.title("Order Status Distribution", fontsize=18, weight='bold')
-    plt.xlabel("Number of Orders", fontsize=14)
-    plt.ylabel("Order Status", fontsize=14)
+    plt.xlabel("Count", fontsize=14)
+    plt.ylabel("Status", fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
 
     for i, v in enumerate(order_status.values):
-        ax.text(v + 500, i, str(v), color='black', va='center', ha='left', fontsize=10)
+        ax.text(v + 1000, i, str(v), color='black', va='center', ha='left', fontsize=10)
 
-    x_max = order_status.values.max() + 1500
+    x_max = order_status.max() + 20000
     plt.xlim(0, x_max)
 
     st.pyplot(fig)
