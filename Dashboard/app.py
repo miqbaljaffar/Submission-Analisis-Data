@@ -4,8 +4,9 @@ import seaborn as sns
 import streamlit as st
 from babel.numbers import format_currency
 
-# Set style
-sns.set(style='darkgrid')
+# Set uniform style and color palette
+sns.set(style='whitegrid')
+main_palette = sns.color_palette("Spectral", n_colors=10)
 
 # Helper functions
 def create_daily_orders_df(df):
@@ -115,118 +116,72 @@ ax.tick_params(axis="y", labelsize=12)
 plt.grid(True, linestyle='--', alpha=0.7)
 st.pyplot(fig)
 
-# Order Items
+# Product Sales - Top 5 and Bottom 5 Products
 st.subheader("Product Sales")
-col1, col2 = st.columns(2)
 
-with col1:
-    total_items = sum_order_items_df["product_count"].sum()
-    st.markdown(f"Total Product Sales: **{total_items}**")
+def plot_top_bottom_5_products(df):
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
 
-with col2:
-    avg_items = sum_order_items_df["product_count"].mean()
-    st.markdown(f"Average Item Sales: **{avg_items:.2f}**")
+    # Top 5 Products
+    sns.barplot(x="product_count", y="product_category_name_english", 
+                data=df.head(5), palette=main_palette[:5], ax=ax[0])
+    ax[0].set_xlabel("Number of Sales", fontsize=16)
+    ax[0].set_title("Top 5 Product Categories", fontsize=18, weight='bold')
+    ax[0].tick_params(axis='y', labelsize=14)
+    ax[0].tick_params(axis='x', labelsize=14)
 
-fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
+    # Bottom 5 Products
+    sns.barplot(x="product_count", y="product_category_name_english", 
+                data=df.tail(5), palette=main_palette[5:], ax=ax[1])
+    ax[1].set_xlabel("Number of Sales", fontsize=16)
+    ax[1].set_title("Bottom 5 Product Categories", fontsize=18, weight='bold')
+    ax[1].invert_xaxis()  # Consistent inversion for bottom 5
+    ax[1].yaxis.set_label_position("right")
+    ax[1].yaxis.tick_right()
+    ax[1].tick_params(axis='y', labelsize=14)
+    ax[1].tick_params(axis='x', labelsize=14)
 
-top_colors = sns.color_palette("crest", n_colors=5)
-sns.barplot(x="product_count", y="product_category_name_english", data=sum_order_items_df.head(5), palette=top_colors, ax=ax[0])
-ax[0].set_xlabel("Number of Sales", fontsize=16)
-ax[0].set_title("Top 5 Product Categories", fontsize=18, weight='bold')
-ax[0].tick_params(axis='y', labelsize=14)
-ax[0].tick_params(axis='x', labelsize=14)
+    st.pyplot(fig)
 
-bottom_colors = sns.color_palette("pastel", n_colors=5)
-sns.barplot(x="product_count", y="product_category_name_english", data=sum_order_items_df.tail(5), palette=bottom_colors, ax=ax[1])
-ax[1].set_xlabel("Number of Sales", fontsize=16)
-ax[1].set_title("Bottom 5 Product Categories", fontsize=18, weight='bold')
-ax[1].invert_xaxis()
-ax[1].yaxis.set_label_position("right")
-ax[1].yaxis.tick_right()
-ax[1].tick_params(axis='y', labelsize=14)
-ax[1].tick_params(axis='x', labelsize=14)
+plot_top_bottom_5_products(sum_order_items_df)
 
-st.pyplot(fig)
-
-# Distribution of Customers
+# Customer Distribution
 st.subheader("Customer Distribution")
 tab1, tab2, tab3 = st.tabs(["State", "Top 10 City", "Order Status"])
 
 with tab1:
     st.markdown(f"Most Common State: **{most_common_state}**")
     fig, ax = plt.subplots(figsize=(12, 8))
-
-    sns.barplot(y=state.customer_state,
-                x=state.customer_count,
-                data=state,
-                palette=sns.color_palette("viridis", n_colors=len(state)),
-                ax=ax
-                )
-
-    plt.title("Customers by State", fontsize=18, weight='bold')
-    plt.xlabel("Number of Customers", fontsize=14)
-    plt.ylabel("State", fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-
-    for i, v in enumerate(state.customer_count):
-        ax.text(v + 1000, i, str(v), color='black', va='center', ha='left', fontsize=10)
-
-    x_max = state.customer_count.max() + 3000
-    plt.xlim(0, x_max)
-
+    sns.barplot(y=state.customer_state, x=state.customer_count, palette=sns.color_palette("viridis", n_colors=len(state)), ax=ax)
+    ax.set_title("Customers by State", fontsize=18, weight='bold')
+    ax.set_xlabel("Number of Customers", fontsize=14)
+    ax.set_ylabel("State", fontsize=14)
+    ax.tick_params(axis='x', labelsize=12)
+    ax.tick_params(axis='y', labelsize=12)
     st.pyplot(fig)
 
 with tab2:
     st.markdown(f"Most Common City: **{most_common_city}**")
-    city_sorted = city.sort_values(by='total_customer', ascending=False)
-    top_10_cities = city_sorted.head(10)
-
+    top_10_cities = city.sort_values(by='total_customer', ascending=False).head(10)
     fig, ax = plt.subplots(figsize=(12, 8))
-
-    sns.barplot(y=top_10_cities.customer_city,
-                x=top_10_cities.total_customer,
-                palette=sns.color_palette("coolwarm", n_colors=len(top_10_cities)),
-                ax=ax
-                )
-
-    plt.title("Top 10 Cities by Customer Count", fontsize=18, weight='bold')
-    plt.xlabel("Number of Customers", fontsize=14)
-    plt.ylabel("City", fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-
-    for i, v in enumerate(top_10_cities.total_customer):
-        ax.text(v + 500, i, str(v), color='black', va='center', ha='left', fontsize=10)
-
-    x_max = top_10_cities.total_customer.max() + 1500
-    plt.xlim(0, x_max)
-
+    sns.barplot(y=top_10_cities.customer_city, x=top_10_cities.total_customer, palette=sns.color_palette("coolwarm", n_colors=len(top_10_cities)), ax=ax)
+    ax.set_title("Top 10 Cities by Customer Count", fontsize=18, weight='bold')
+    ax.set_xlabel("Number of Customers", fontsize=14)
+    ax.set_ylabel("City", fontsize=14)
+    ax.tick_params(axis='x', labelsize=12)
+    ax.tick_params(axis='y', labelsize=12)
     st.pyplot(fig)
 
 with tab3:
     st.markdown(f"Most Common Order Status: **{common_status}**")
-
     fig, ax = plt.subplots(figsize=(8, 6))
-    sns.barplot(y=order_status.index,
-                x=order_status.values,
-                order=order_status.index,
-                palette=sns.color_palette("magma", n_colors=len(order_status)),
-                ax=ax
-                )
-
-    plt.title("Order Status Distribution", fontsize=18, weight='bold')
-    plt.xlabel("Count", fontsize=14)
-    plt.ylabel("Status", fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-
-    for i, v in enumerate(order_status.values):
-        ax.text(v + 1000, i, str(v), color='black', va='center', ha='left', fontsize=10)
-
-    x_max = order_status.max() + 20000
-    plt.xlim(0, x_max)
-
+    sns.barplot(y=order_status.index, x=order_status.values, order=order_status.index, palette=sns.color_palette("magma", n_colors=len(order_status)), ax=ax)
+    ax.set_title("Order Status Distribution", fontsize=18, weight='bold')
+    ax.set_xlabel("Count", fontsize=14)
+    ax.set_ylabel("Status", fontsize=14)
+    ax.tick_params(axis='x', labelsize=12)
+    ax.tick_params(axis='y', labelsize=12)
     st.pyplot(fig)
 
+# Footer
 st.caption('Copyright (C) Mohammad Iqbal Jaffar 2024')
