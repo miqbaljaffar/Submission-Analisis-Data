@@ -100,20 +100,42 @@ with col2:
     avg_spend = format_currency(sum_spend_df["total_spend"].mean(), "BRL", locale="pt_BR")
     st.markdown(f"Average Income: **{avg_spend}**")
 
-fig, ax = plt.subplots(figsize=(12, 6))
+fig, ax = plt.subplots(figsize=(14, 8))
 ax.plot(
     sum_spend_df["order_approved_at"],
     sum_spend_df["total_spend"],
     marker='o',
+    linewidth=2,
     color="#FE0000",
-    linewidth=2
+    linestyle='-'
 )
-ax.set_title("Monthly Total Income", fontsize=20, weight='bold')
-ax.set_xlabel("Date", fontsize=14)
+
+# Adding grid with transparency
+ax.grid(True, linestyle='--', alpha=0.7)
+
+# Annotating only important points (peaks and troughs)
+for i, row in sum_spend_df.iterrows():
+    if row["total_spend"] == sum_spend_df["total_spend"].max() or row["total_spend"] == sum_spend_df["total_spend"].min():
+        ax.text(
+            row["order_approved_at"],
+            row["total_spend"],
+            f'R${row["total_spend"]:,.2f}',
+            color='black',
+            ha='center',
+            va='bottom',
+            fontsize=12
+        )
+
+# Title and labels
+ax.set_title("Total Income per Month (2018)", fontsize=20, weight='bold')
+ax.set_xlabel("Month-Year", fontsize=14)
 ax.set_ylabel("Total Income (BRL)", fontsize=14)
-ax.tick_params(axis="x", rotation=45, labelsize=12)
-ax.tick_params(axis="y", labelsize=12)
-plt.grid(True, linestyle='--', alpha=0.7)
+ax.tick_params(axis='x', labelsize=12, rotation=45)
+ax.tick_params(axis='y', labelsize=12)
+
+# Adjust layout
+plt.tight_layout()
+
 st.pyplot(fig)
 
 # Product Sales - Top 5 and Bottom 5 Products
