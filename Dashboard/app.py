@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
+import geopandas as gpd
+from shapely.geometry import Point
 from babel.numbers import format_currency
 
 # Set uniform style and color palette
@@ -79,30 +81,21 @@ with st.sidebar:
 
 main_df = all_df[(all_df["order_approved_at"] >= str(start_date)) & (all_df["order_approved_at"] <= str(end_date))]
 
-daily_orders_df = create_daily_orders_df(main_df)
-sum_spend_df = create_sum_spend_df(main_df)
-sum_order_items_df = create_sum_order_items_df(main_df)
-review_score, common_score = review_score_df(main_df)
-state, most_common_state = create_bystate_df(main_df)
-city, most_common_city = create_bycity_df(main_df)
-order_status, common_status = create_order_status(main_df)
-
 # E-commerce Income
 st.subheader("E-commerce Income")
 col1, col2 = st.columns(2)
 
 with col1:
-    total_spend = format_currency(sum_spend_df["total_spend"].sum(), "BRL", locale="pt_BR")
+    total_spend = format_currency(main_df["payment_value"].sum(), "BRL", locale="pt_BR")
     st.markdown(f"Total Income: **{total_spend}**")
 
 with col2:
-    avg_spend = format_currency(sum_spend_df["total_spend"].mean(), "BRL", locale="pt_BR")
+    avg_spend = format_currency(main_df["payment_value"].mean(), "BRL", locale="pt_BR")
     st.markdown(f"Average Income: **{avg_spend}**")
 
 fig, ax = plt.subplots(figsize=(12, 6))
 ax.plot(
-    sum_spend_df["order_approved_at"],
-    sum_spend_df["total_spend"],
+    main_df.groupby(main_df["order_approved_at"].dt.to_period("M")).sum()["payment_value"].reset_index(),
     marker='o',
     color="#FE0000",
     linewidth=2
@@ -147,13 +140,14 @@ def plot_top_bottom_5_products(df):
 
     st.pyplot(fig)
 
-plot_top_bottom_5_products(sum_order_items_df)
+plot_top_bottom_5_products(create_sum_order_items_df(main_df))
 
 # Customer Distribution
 st.subheader("Customer Distribution")
 tab1, tab2, tab3 = st.tabs(["State", "Top 10 City", "Order Status"])
 
 with tab1:
+    state, most_common_state = create_bystate_df(main_df)
     st.markdown(f"Most Common State: **{most_common_state}**")
     fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -186,12 +180,13 @@ with tab1:
     st.pyplot(fig)
 
 with tab2:
+    city, most_common_city = create_bycity_df(main_df)
     st.markdown(f"Most Common City: **{most_common_city}**")
     fig, ax = plt.subplots(figsize=(12, 8))
     top_10_cities = city.head(10)
 
     # Plot
-    sns.barplot(x='total_customer', y='customer_city', data=top_10_cities, palette="coolwarm", ax=ax)
+    sns.barplot(x='total_customer', y='customer_city', data=top_10_cities, palette='viridis', orient='h', ax=ax)
     ax.set_title("Top 10 Cities by Customer Count", fontsize=18, weight='bold')
     ax.set_xlabel("Number of Customers", fontsize=14)
     ax.set_ylabel("City", fontsize=14)
@@ -199,7 +194,7 @@ with tab2:
     ax.tick_params(axis='y', labelsize=12)
 
     # Set x-axis limit
-    x_max = top_10_cities['total_customer'].max() + 1000
+    x_max = top_10_cities['total_customer'].max() + 500  # Extra space for labels
     ax.set_xlim(0, x_max)
 
     # Annotate bars with count
@@ -215,34 +210,75 @@ with tab2:
     st.pyplot(fig)
 
 with tab3:
-    st.markdown(f"Most Common Order Status: **{common_status}**")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.set_style("whitegrid")
+    status, most_common_status = create_order_status(main_df)
+    st.markdown(f"Most Common Order Status: **{most_common_status}**")
+    fig, ax = plt.subplots(figsize=(12, 8))
 
-    # Create barplot with consistent coloring
-    sns.barplot(y=order_status.index, x=order_status.values, palette="Reds_r", ax=ax)
+    # Plot
+    sns.barplot(x=status.values, y=status.index, palette='viridis', orient='h', ax=ax)
+    ax.set_title("Order Status Distribution", fontsize=18, weight='bold')
+    ax.set_xlabel("Number of Orders", fontsize=14)
+    ax.set_ylabel("Order Status", fontsize=14)
+    ax.tick_params(axis='x', labelsize=12)
+    ax.tick_params(axis='y', labelsize=12)
 
-    # Add grid only on y-axis
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    # Set x-axis limit
+    x_max = status.max() + 500  # Extra space for labels
+    ax.set_xlim(0, x_max)
 
-    # Add labels to bars
-    for i, v in enumerate(order_status):
-        ax.text(v + 0.02 * order_status.max(), i, str(v), ha='left', va='center', fontsize=12, color='black')
+    # Annotate bars with count
+    for p in ax.patches:
+        ax.annotate(f'{p.get_width():,}', 
+                    (p.get_width() + 100, p.get_y() + p.get_height() / 2),
+                    va='center',
+                    ha='left',
+                    fontsize=12,
+                    color='black')
 
-    # Add title and labels
-    plt.title('Order Status Distribution', fontsize=18, weight='bold')
-    plt.xlabel('Number of Orders', fontsize=14)
-    plt.ylabel('Order Status', fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-
-    # Set y-axis limit
-    plt.ylim(-0.5, len(order_status) - 0.5)
-
-    # Ensure layout is tight
     plt.tight_layout()
-
     st.pyplot(fig)
+
+# Customer Locations Map
+st.subheader("Customer Locations in Brazil")
+
+# Load geolocation data
+customer_df = pd.read_csv('https://raw.githubusercontent.com/miqbaljaffar/Submission-Analisis-Data/blob/main/Dataset/customers_dataset.csv')  # Replace with actual path
+geolocation_df = pd.read_csv('https://raw.githubusercontent.com/miqbaljaffar/Submission-Analisis-Data/blob/main/Dataset/geolocation_dataset.csv')  # Replace with actual path
+
+# Merge customer location with geolocation data
+customer_geo = customer_df.merge(geolocation_df, left_on='customer_zip_code_prefix', right_on='geolocation_zip_code_prefix')
+
+# Create a GeoDataFrame for geospatial analysis
+gdf = gpd.GeoDataFrame(customer_geo, geometry=gpd.points_from_xy(customer_geo.geolocation_lng, customer_geo.geolocation_lat))
+
+# Load the Natural Earth shapefile for Brazil map
+world = gpd.read_file('https://raw.githubusercontent.com/miqbaljaffar/Submission-Analisis-Data/blob/main/ne_110m_admin_0_countries.zip')
+
+# Filter for Brazil
+brazil = world[world['NAME'] == "Brazil"]
+
+# Sample a subset of the data to plot (e.g., 10% of the total points)
+gdf_sample = gdf.sample(frac=0.1, random_state=42)
+
+# Plot Brazil and the sampled customer locations
+fig, ax = plt.subplots(figsize=(12, 10))  # Adjust figure size for readability
+
+# Plot Brazil with clear boundaries and neutral background
+brazil.plot(ax=ax, color='white', edgecolor='black')
+
+# Plot customer locations with a single color and proper sizing
+gdf_sample.plot(ax=ax, color='blue', markersize=5, alpha=0.8, edgecolor='k')
+
+# Add a clear and informative title and axis labels with units
+ax.set_title('Customer Locations in Brazil', fontsize=16)
+ax.set_xlabel('Longitude (degrees)', fontsize=12)
+ax.set_ylabel('Latitude (degrees)', fontsize=12)
+
+# Ensure the layout is tidy and free of unnecessary elements
+plt.tight_layout()
+
+# Display the map in Streamlit
+st.pyplot(fig)
 
 # Footer
 st.caption('Copyright (C) Mohammad Iqbal Jaffar 2024')
