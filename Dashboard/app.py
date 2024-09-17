@@ -187,26 +187,51 @@ with tab1:
 
 with tab2:
     st.markdown(f"Most Common City: **{most_common_city}**")
-    top_10_cities = city.sort_values(by='total_customer', ascending=False).head(10)
-    fig, ax = plt.subplots(figsize=(12, 8))
-    sns.barplot(y=top_10_cities.customer_city, x=top_10_cities.total_customer, palette=sns.color_palette("coolwarm", n_colors=len(top_10_cities)), ax=ax)
+    fig, ax = plt.subplots(figsize=(12, 10))
+    sns.barplot(x='total_customer', y='customer_city', data=city.head(10), palette="Blues_r", ax=ax)
     ax.set_title("Top 10 Cities by Customer Count", fontsize=18, weight='bold')
     ax.set_xlabel("Number of Customers", fontsize=14)
     ax.set_ylabel("City", fontsize=14)
     ax.tick_params(axis='x', labelsize=12)
     ax.tick_params(axis='y', labelsize=12)
+    
+    # Annotate bars with count
+    for p in ax.patches:
+        ax.annotate(f'{p.get_width():,}', 
+                    (p.get_width() + 100, p.get_y() + p.get_height() / 2),
+                    va='center',
+                    ha='left',
+                    fontsize=12,
+                    color='black')
+
+    plt.tight_layout()
     st.pyplot(fig)
 
 with tab3:
     st.markdown(f"Most Common Order Status: **{common_status}**")
-    fig, ax = plt.subplots(figsize=(8, 6))
-    sns.barplot(y=order_status.index, x=order_status.values, order=order_status.index, palette=sns.color_palette("magma", n_colors=len(order_status)), ax=ax)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Plotting the barplot with consistent style and color palette
+    sns.barplot(x=order_status.values, y=order_status.index, palette="Reds_r", ax=ax)
+    
+    # Adding grid only on y-axis
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    
+    # Adding labels to bars
+    for i, v in enumerate(order_status):
+        ax.text(v + 0.02 * order_status.max(), i, str(v), ha='left', va='center', fontsize=12, color='black')
+    
+    # Adding title and labels
     ax.set_title("Order Status Distribution", fontsize=18, weight='bold')
-    ax.set_xlabel("Count", fontsize=14)
-    ax.set_ylabel("Status", fontsize=14)
+    ax.set_xlabel("Number of Orders", fontsize=14)
+    ax.set_ylabel("Order Status", fontsize=14)
     ax.tick_params(axis='x', labelsize=12)
     ax.tick_params(axis='y', labelsize=12)
+    
+    # Setting x-axis limits
+    ax.set_xlim(0, order_status.max() + 0.1 * order_status.max())
+    
+    # Ensuring layout is tight
+    plt.tight_layout()
+    
     st.pyplot(fig)
-
-# Footer
-st.caption('Copyright (C) Mohammad Iqbal Jaffar 2024')
