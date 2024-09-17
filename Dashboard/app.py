@@ -6,7 +6,7 @@ from babel.numbers import format_currency
 
 # Set uniform style and color palette
 sns.set(style='whitegrid')
-main_palette = sns.color_palette("Spectral", n_colors=10)
+main_palette = sns.color_palette("viridis", 10)
 
 # Helper functions
 def create_daily_orders_df(df):
@@ -120,26 +120,31 @@ st.pyplot(fig)
 st.subheader("Product Sales")
 
 def plot_top_bottom_5_products(df):
-    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(20, 10))
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(24, 8))
 
     # Top 5 Products
     sns.barplot(x="product_count", y="product_category_name_english", 
-                data=df.head(5), palette=main_palette[:5], ax=ax[0])
-    ax[0].set_xlabel("Number of Sales", fontsize=16)
-    ax[0].set_title("Top 5 Product Categories", fontsize=18, weight='bold')
-    ax[0].tick_params(axis='y', labelsize=14)
-    ax[0].tick_params(axis='x', labelsize=14)
+                data=df.head(5), palette=sns.color_palette("viridis", 5), ax=ax[0])
+    ax[0].set_xlabel("Number of Products Sold", fontsize=14)
+    ax[0].set_title("Top 5 Best-Selling Products", fontsize=20, weight='bold')
+    ax[0].tick_params(axis='y', labelsize=12)
+    ax[0].tick_params(axis='x', labelsize=12)
+    ax[0].bar_label(ax[0].containers[0], fmt='%d', label_type='edge', fontsize=12)  # Add labels to bars
 
     # Bottom 5 Products
     sns.barplot(x="product_count", y="product_category_name_english", 
-                data=df.tail(5), palette=main_palette[5:], ax=ax[1])
-    ax[1].set_xlabel("Number of Sales", fontsize=16)
-    ax[1].set_title("Bottom 5 Product Categories", fontsize=18, weight='bold')
-    ax[1].invert_xaxis()  # Consistent inversion for bottom 5
+                data=df.sort_values(by="product_count", ascending=True).head(5), palette=sns.color_palette("viridis_r", 5), ax=ax[1])
+    ax[1].set_xlabel("Number of Products Sold", fontsize=14)
+    ax[1].set_title("Bottom 5 Least-Selling Products", fontsize=20, weight='bold')
     ax[1].yaxis.set_label_position("right")
     ax[1].yaxis.tick_right()
-    ax[1].tick_params(axis='y', labelsize=14)
-    ax[1].tick_params(axis='x', labelsize=14)
+    ax[1].tick_params(axis='y', labelsize=12)
+    ax[1].tick_params(axis='x', labelsize=12)
+    ax[1].bar_label(ax[1].containers[0], fmt='%d', label_type='edge', fontsize=12)  # Add labels to bars
+
+    # Main title and layout adjustment
+    plt.suptitle("Sales Performance of Product Categories", fontsize=26, weight='bold')
+    plt.subplots_adjust(top=0.85)
 
     st.pyplot(fig)
 
