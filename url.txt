@@ -1,2 +1,2 @@
-Ini ada alamat website untuk dashboard di platform Streamlit
+Ini adalah alamat website untuk dashboard di platform Streamlit:
 https://ezg6fqdwa7u3eqsdv5fouj.streamlit.app/
