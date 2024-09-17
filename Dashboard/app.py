@@ -220,7 +220,7 @@ with tab3:
     sns.set_style("whitegrid")
 
     # Create barplot with consistent coloring
-    ax = sns.barplot(y=order_status.index, x=order_status.values, palette="Reds_r", ax=ax)
+    sns.barplot(y=order_status.index, x=order_status.values, palette="Reds_r", ax=ax)
 
     # Add grid only on y-axis
     plt.grid(axis='y', linestyle='--', alpha=0.7)
